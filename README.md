@@ -49,7 +49,6 @@ To help you get started, check these DataCamp resources:
 - [Setting Up VS Code for Python](https://www.datacamp.com/tutorial/setting-up-vscode-python) - Complete guide to VS Code for data science (DataCamp tutorial)
 - [VS Code for Data Science](https://code.visualstudio.com/docs/datascience/data-science-tutorial) - Official VS Code data science tutorial
 - [GitHub Copilot Agent Mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) - Use AI agents for autonomous coding tasks
-- [GitHub Copilot Coding Agent](https://code.visualstudio.com/docs/copilot/copilot-coding-agent) - Multi-step AI pair programming in VS Code
 
 
 ## Template Structure
