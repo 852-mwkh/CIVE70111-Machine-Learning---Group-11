@@ -6,13 +6,15 @@
 #   pip install -r requirements.txt
 
 jupyter
+ipython
 pandas
 numpy
 matplotlib
-scikit-learn
 seaborn
-python-dotenv
-httpx
+scikit-learn
+PyALE
+shap
+torch torchvision --index-url https://download.pytorch.org/whl/cu126
 
 # Add your additional packages below
 
