@@ -313,34 +313,51 @@ Future Work:
 > **Note:** Individual contributions are tracked through Git commit history. This section provides a high-level summary.
 
 **[Peng Yongxi]:**
-- [Contribution area 1,  "Data collection and cleaning (notebooks/01-data-loading.ipynb)"]
-- [Contribution area 2,  "Statistical analysis (src/analysis.py)"]
+- [Contribution area 1,  "Predict real-time inverter output power (01_Task 1.ipynb)"]
+- [Contribution area 2,  "Statistical analysis preperation"]
 - [Contribution area 3,  "Documentation (README.md, methodology)"]
+- [Contribution area 4,  "Plant 1 — Data Exploration, Analysis and Preprocessing (02_Task 2.ipynb)"]
+- [Contribution area 5,  "Plant 2 — Data Exploration, Analysis and Preprocessing (02_Task_2_Plant_2.ipynb)"]
+- [Contribution area 6,  "PV Plant Modelling and Machine Learning (04_Task_4_and_5_Classifcation_model_and_model_interpretation.ipynb)"]
+- [Contribution area 7,  "Stremlit design (app.py)"]
+- [Contribution area 8,  "Stremlit design (config.py)"]
+- [Contribution area 9,  "Stremlit design (utils.py)"]
+
 
 **[Yuanqi Zhao]:**
-- []
-- []
-- []
+- [Contribution area 1, LSTM "PV Plant Modelling and Machine Learning.ipynb"]
+- [Contribution area 2, LSTM Stremlit design "app.py"]
+- [Contribution area 3, Presentation LSTM Plant Modelling]
+- [Contribution area 4, Presentation LSTM Plant Modelling]
 
 **[King Hung Michael Wong]:**
-- [Contribution area 1]
-- [Contribution area 2]
-- [Contribution area 3]
+- [Contribution area 1,  "Plant 1 — Data Exploration, Analysis and Preprocessing (02_Task 2.ipynb)"]
+- [Contribution area 2,  "Plant 2 — Data Exploration, Analysis and Preprocessing (02_Task_2_Plant_2.ipynb)"]
+- [Contribution area 3, "Solar PV Plant 1 & Plant 2 — Cleaning, Modelling & Bias–Variance Analysis" (03_Task_3_Plant_1_and_2.ipynb)]
+- [Contribution area 4, "Plant Modelling and Machine Learning" (03_Task_3_Plant_1_and_2.ipynb)]
+- [Contribution area 5,  "Model Interpretation of Random Forest (05_Task_5_Random_Forest.ipynb)"]
+- [Contribution area 6,  "Documentation (05_Task_5_AC&DC.ipynb)"]
+- [Contribution area 7,  "Model Interpretation of Random Forest (05_Task_5_Random_Forest.ipynb)"]
+- [Contribution area 8,  "Model Interpretation of Random Forest (05_Task_5_AC & DC.ipynb)"]
+- [Contribution area 9,  "Stremlit design (app.py)"]
+- [Contribution area 10,  "Stremlit design (config.py)"]
+- [Contribution area 11,  "Stremlit design (utils.py)"]
 
 **[Haojiang Wang]:**
-- [Contribution area 1]
-- [Contribution area 2]
-- [Contribution area 3]
+- [Contribution area 1, "Predict real-time inverter output power (01_Task 1.ipynb)"]
+- [Contribution area 2, "Statistical analysis preperation"]
+- [Contribution area 3, "Documentation (README.md, methodology)"]
+- [Contribution area 4, "Presentation gernal scope, Task 3 and Task 5"]
 
 **[Weiyi Bao]:**
-- [Contribution area 1]
-- [Contribution area 2]
-- [Contribution area 3]
+- [Contribution area 1, "Model Interpretation of Random Forest data orginisation (05_Task_5_Random_Forest.ipynb)"]
+- [Contribution area 2, "Model Interpretation of Random Forest data orginisation (05_Task_5_Random_Forest.ipynb)"]
+- [Contribution area 3, "Documentation (README.md, methodology)"]
 
-**[Weiyi Bao]:**
-- [Contribution area 1]
-- [Contribution area 2]
-- [Contribution area 3]
+**[Steven Sze Yin]:**
+- [Contribution area 1, Note down minute and group meetings]
+- [Contribution area 2, Oraginisation project work flow]
+- [Contribution area 3, Preperation to powerpoint sides]
 
 **Joint contributions:**
 - [Areas where team members collaborated, e.g., "Code review, testing, and integration"]
