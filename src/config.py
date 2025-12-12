@@ -17,8 +17,7 @@ import os
 # =====================================================================
 # 🗂 BASE DIRECTORY FOR ALL DATA
 # =====================================================================
-# DATA_ROOT = r"C:\Users\MSI-NB\Desktop\src"
-DATA_ROOT = r"C:\Users\B.KING\OneDrive - Imperial College London\CIVE70111 Machine Learning\CouseWork\Group-11\src"
+DATA_ROOT = r"C:\Users\MSI-NB\Desktop\src"
 
 # =====================================================================
 # 🌞 TASK 3 OUTPUTS (INVERTER RESULTS)

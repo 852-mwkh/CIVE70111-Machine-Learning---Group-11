@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from sklearn.metrics import f1_score, confusion_matrix, precision_score, recall_score
 from utils import load_all_models, predict_label
 import nbformat
-
+import joblib
 import os
 import glob
 import pickle
@@ -692,25 +692,94 @@ def make_hist(scores, labels, thr, axis_title_size=18, font_size=16, nbins=50):
 # Load models + results (cached)
 # -------------------------
 @st.cache_resource
-def get_artifacts():
-    return load_all_models()
+def load_all_models():
+    data = {}
 
-artifacts = get_artifacts()
+    # Folders containing exported outputs
+    result_files = glob.glob("results/*.csv")
+    model_files  = glob.glob("models/*.pkl")
 
+    # Extract unique (plant, version, inverter_id)
+    inverter_keys = set()
+
+    for path in model_files:
+        # example: models/svm_Plant1_v1_1BY6WEcLGh8j5v7.pkl
+        base = os.path.basename(path).replace(".pkl", "")
+        _, plant, version, inverter = base.split("_", 3)
+        inverter_keys.add((plant, version, inverter))
+
+    for plant, version, inverter in inverter_keys:
+        key = f"{plant}_{version}_{inverter}"
+
+    # ----------------------------------------------------
+    # 2. Load artifacts for each inverter
+    # ----------------------------------------------------
+    for plant, version, inverter in sorted(inverter_keys):
+        key = f"{plant}_{version}_{inverter}"
+
+        data[key] = {
+            # Load model EXACTLY from model_files (no double .pkl)
+            "svm": joblib.load(f"models/svm_{plant}_{version}_{inverter}.pkl"),
+
+            # Result artifacts
+            "cm_svm": np.load(f"results/confusion_{plant}_{version}_{inverter}.npy"),
+            "metrics": pd.read_csv(f"results/metrics_{plant}_{version}_{inverter}.csv"),
+            "features": np.load(f"results/features_{plant}_{version}_{inverter}.npy", allow_pickle=True),
+            "threshold": float(
+                pd.read_csv(f"results/thresholds_{plant}_{version}_{inverter}.csv")["threshold"].iloc[0]
+            ),
+            "X_te": np.load(f"results/X_te_{plant}_{version}_{inverter}.npy"),
+            "y_te": np.load(f"results/y_te_{plant}_{version}_{inverter}.npy"),
+            "drop_importance": pd.read_csv(f"results/drop_importance_{plant}_{version}_{inverter}.csv"),
+            "ale": pd.read_csv(f"results/ale_{plant}_{version}_{inverter}.csv"),
+        }
+
+    return data
+
+
+artifacts = load_all_models()
+
+# -------------------------
+# Page Setup
+# -------------------------
 def dashboard_2():
-    
     st.title("Classification Model")
-    
+
     # -------------------------
     # Sidebar Controls
     # -------------------------
     st.sidebar.header("Controls")
-    plant_key = {"Plant 1": "plant1", "Plant 2": "plant2"}[st.sidebar.selectbox("Plant:", ["Plant 1", "Plant 2"])]
-    version_key = {"No feature selection": "nofs", "Feature selection": "fs"}[st.sidebar.selectbox("Model version:", ["No feature selection", "Feature selection"])]
 
-    idkey = f"{plant_key}_{version_key}"
+    # ---- Plant selector ----
+    plant = st.sidebar.selectbox("Plant:", ["Plant1", "Plant2"])
+
+    # ---- Version selector ----
+    version = st.sidebar.selectbox("Version:", ["v1", "v2"])
+
+    # ---- List available inverters for this plant+version ----
+    available_inverters = sorted([
+        key.rsplit("_", 1)[-1]  
+        for key in artifacts.keys()
+        if key.startswith(f"{plant}_{version}")
+    ])
+
+    if not available_inverters:
+        st.sidebar.error(f"No inverters found for {plant} {version}")
+        st.stop()
+
+    # ---- Select inverter ----
+    inverter = st.sidebar.selectbox("Inverter:", available_inverters)
+
+    # ---- Compose key ----
+    idkey = f"{plant}_{version}_{inverter}"
     m = artifacts[idkey]
-    svm, features, thr, ale_df = m["svm"], m["features"], m["threshold"], m["ale"]
+
+    # Load objects
+    svm = m["svm"]
+    features = m["features"]
+    thr = m["threshold"]
+    ale_df = m["ale"]
+
     st.sidebar.write(f"**Threshold:** `{thr:.4f}`")
 
     # ---------------------------------------------------------
@@ -718,7 +787,7 @@ def dashboard_2():
     # ---------------------------------------------------------
     st.subheader("Enter Feature Values for Prediction")
 
-    if plant_key == "plant2":
+    if plant == "plant2":
         u = 2300000000.0
         l = 0.0
     else:
@@ -731,49 +800,41 @@ def dashboard_2():
         "TOTAL_YIELD_CLEAN": (l, u), "AMBIENT_TEMPERATURE": (0.0, 40.0),
         "MODULE_TEMPERATURE": (0.0, 70.0),}
 
-
     cols = st.columns(3)
     inputs = {}
     base_features = [f for f in features if f not in ["DC/IRRA", "AC/IRRA"]]
-    ale_min, ale_max = ale_df["ale"].min() * 1.2, ale_df["ale"].max() * 1.2
-    show_ac_slider = (plant_key == "plant2" and version_key == "fs")
+    ale_min, ale_max = ale_df["ale"].min() * 1.2, ale_df["ale"].max()*1.2
+    show_ac_slider = (plant == "Plant2" and version == "v2")
 
     for i, feat in enumerate(base_features):
-        with cols[i % 3]:
-            st.markdown(f"### {feat}")
+            with cols[i % 3]:
+                st.markdown(f"### {feat}")
 
-            # ----- SLIDER -----
-            lo, hi = slider_ranges.get(feat, (0.0, 2000.0))
-            slider_key = f"slider_{feat}"
+                # ----- SLIDER -----
+                lo, hi = slider_ranges.get(feat, (0.0, 2000.0))
+                slider_key = f"slider_{feat}"
 
-            val = st.slider( "",float(lo), float(hi),float((lo + hi) / 2), key=slider_key,)
-            inputs[feat] = val
+                val = st.slider( "",float(lo), float(hi),float((lo + hi) / 2), key=slider_key,)
+                inputs[feat] = val
 
-            fig_key = f"ale_fig_{feat}"
+                fig_key = f"ale_fig_{feat}"
 
-            fig_key = f"ale_fig_{version_key}_{plant_key}_{feat}"
-            prev_key = f"{fig_key}_prev"
+                fig_key = f"ale_fig_{version}_{plant}_{feat}"
+                prev_key = f"{fig_key}_prev"
 
-            # Read old slider value
-            prev_val = st.session_state.get(prev_key, None)
+                # Read old slider value
+                prev_val = st.session_state.get(prev_key, None)
 
-            # Recompute figure only if:
-            # 1) slider changed OR
-            # 2) new version/plant is selected (key is new)
-            if fig_key not in st.session_state or prev_val != val:
-                st.session_state[fig_key] = draw_ale_mini_plot(ale_df, feat, val)
+                # Always recompute ALE plot for correct model/state
+                fig = draw_ale_mini_plot(ale_df, feat, val)
+                st.plotly_chart(fig, use_container_width=True)
+        
 
-            # Display figure
-            st.plotly_chart(st.session_state[fig_key], use_container_width=True)
-
-            # Store slider value for next rerun
-            st.session_state[prev_key] = val
-            
     if show_ac_slider:
         with cols[0]:
             st.markdown("### AC_CLEAN")
             inputs["AC_CLEAN"] = st.slider("", 0.0, 1400.0, 700.0, key="slider_AC_CLEAN")
-        
+            
     elif "AC_CLEAN" not in base_features:
         inputs["AC_CLEAN"] = 0.0
 
@@ -783,7 +844,7 @@ def dashboard_2():
 
     if not show_ac_slider:
         st.write("### Additional Features")
-    
+        
     # -- First row: numeric values
     if not show_ac_slider: 
         num_cols = st.columns(3)
@@ -798,14 +859,14 @@ def dashboard_2():
         with num_cols[0]:
             st.write(f"**AC/IRRA:** {inputs['AC/IRRA']:.4f}")
 
-    # -- Second row: ALE plots
+        # -- Second row: ALE plots
     if not show_ac_slider:
         plot_cols = st.columns(3)
         ratio_features = ["DC/IRRA", "AC/IRRA"]
     else:
         plot_cols = st.columns(3)
         ratio_features = ["AC/IRRA"]
-        
+            
     for idx, feat in enumerate(ratio_features):
         col = plot_cols[idx]
         val = inputs[feat]
@@ -814,18 +875,10 @@ def dashboard_2():
             if feat not in ale_df["feature"].unique():
                 st.info("No ALE PLOT")
                 continue
-            # Cache key
-            fig_key = f"ale_fig_{version_key}_{plant_key}_{feat}"
-            prev_key = f"{fig_key}_prev"
-            prev_val = st.session_state.get(prev_key, None)
+                # Cache key
+            fig = draw_ale_mini_plot(ale_df, feat, val)
+            st.plotly_chart(fig, use_container_width=True)
 
-            # Recompute ALE only if changed
-            if fig_key not in st.session_state or prev_val != val:
-                st.session_state[fig_key] = draw_ale_mini_plot(ale_df, feat, val)
-
-            st.plotly_chart(st.session_state[fig_key], use_container_width=True)
-
-            st.session_state[prev_key] = val
 
     X_input = pd.DataFrame([inputs], columns=features)
 
@@ -835,6 +888,7 @@ def dashboard_2():
         st.markdown(f"### Prediction: **{'Suboptimal (1)' if label else 'Optimal (0)'}**")
         st.markdown(f"Score: `{score:.4f}`, Threshold: `{thr:.4f}`")
         st.plotly_chart(go.Figure(go.Indicator(mode="gauge+number", value=score,gauge={"axis": {"range": [-3, 3]}, "threshold": {"value": thr}},title={"text": "SVM Decision Score"})),use_container_width=True,)
+
     # -------------------------
     # Tabs
     # -------------------------
@@ -868,7 +922,6 @@ def dashboard_2():
         mn, mx = drop_df["importance"].min(), drop_df["importance"].max()
         fig.update_yaxes(range=[mn - abs(mn) * 2, mx + abs(mx) * 0.2])
         st.plotly_chart(apply_plot_style(fig), use_container_width=True)
-        
     # -------------------------
     # Threshold Explorer
     # -------------------------
@@ -891,7 +944,7 @@ def dashboard_2():
     c1.metric("Precision", f"{p:.3f}")
     c2.metric("Recall", f"{r:.3f}")
     c3.metric("F1 Score", f"{f1:.3f}")
-    
+        
     st.subheader("Updated Score Distribution")
     st.plotly_chart(make_hist(scores, y_true, thr_user), use_container_width=True, key="threshold_hist")
 
@@ -903,10 +956,7 @@ def dashboard_2():
 # DASHBOARD 3
 # -------------------------
 
-# BASE_DIR = r"C:\Users\MSI-NB\Desktop\src\lresults" # <---------------------------------------------------------------------------------------------------- ( Change Path )
-BASE_DIR = r"C:\Users\B.KING\OneDrive - Imperial College London\CIVE70111 Machine Learning\CouseWork\Group-11\src\lresults" # <---------------------------------------------------------------------------------------------------- ( Change Path )
-
-
+BASE_DIR = r"C:\Users\MSI-NB\Desktop\src\lresults"
 
 RESULT_FILES = {
     "Plant 1": {
